@@ -62,3 +62,43 @@ export function useAgentHistory() {
     refetchOnWindowFocus: false,
   });
 }
+
+// 실측상 마지막 200개 항목이면 대부분 대화 전체가 들어온다. 근거는 docs/specs/에이전트-대화-미리보기-2026-11-02.md.
+const PREVIEW_LIMIT = 200;
+
+export interface PreviewMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export interface AgentPreview {
+  messages: PreviewMessage[];
+  skipped: number;
+  hasOlder: boolean;
+}
+
+export async function fetchPreview(paseo: PaseoApi, agentId: string): Promise<AgentPreview> {
+  const page = await paseo.agents
+    .ref(agentId)
+    .timeline.refetch({ direction: "tail", limit: PREVIEW_LIMIT, projection: "projected" });
+  // 실패는 예외로도 오고(프로바이더 실행 파일이 없을 때), 응답의 error 필드로도 올 수 있어서 둘 다 화면의 오류로 보낸다.
+  if (page.error) throw new Error(page.error);
+  const messages: PreviewMessage[] = [];
+  for (const { item } of page.entries) {
+    if (item.type === "user_message") messages.push({ role: "user", text: item.text });
+    else if (item.type === "assistant_message") messages.push({ role: "assistant", text: item.text });
+  }
+  return { messages, skipped: page.entries.length - messages.length, hasOlder: page.hasOlder };
+}
+
+export function useAgentPreview(agentId: string) {
+  const paseo = usePaseo();
+  return useQuery({
+    queryKey: ["agents", "timeline", agentId],
+    queryFn: () => fetchPreview(paseo, agentId),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    // 프로바이더에 따라 요청마다 프로세스를 띄우려 해서(실측 4초), 실패를 자동으로 다시 시도하지 않는다.
+    retry: false,
+  });
+}

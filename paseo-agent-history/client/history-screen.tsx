@@ -1,6 +1,6 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import {
   Button,
@@ -34,6 +34,7 @@ import {
   type HistoryAgent,
   type SortKey,
 } from "./filters";
+import { AgentPreviewPane } from "./preview";
 import { useAgentHistory } from "./queries";
 
 const CONTENT_MAX_WIDTH = 960;
@@ -76,6 +77,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [activeIndex, setActiveIndex] = useState(0);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   useEffect(() => {
     setVisible(PAGE_SIZE);
     setActiveIndex(0);
@@ -168,6 +170,12 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
         backgroundColor: theme.colors.surface0,
       },
       empty: { color: theme.colors.foregroundMuted, fontSize: 13, padding: SPACE.lg },
+      preview: {
+        paddingVertical: SPACE.md,
+        paddingHorizontal: SPACE.lg,
+        borderColor: theme.colors.border,
+        backgroundColor: theme.colors.surface1,
+      },
       main: { flex: 1 },
       mainContent: { paddingVertical: SPACE.xl, gap: SPACE.sm },
       // 필터 블록과 결과 사이를 필터 줄 사이보다 넓게 벌려 두 묶음을 가른다.
@@ -296,23 +304,39 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
         {filtered.length === 0 ? (
           <Text style={styles.empty}>조건에 맞는 에이전트가 없습니다.</Text>
         ) : (
-          shownRows.map((agent, index) => (
-            <AgentRow
-              key={agent.id}
-              agent={agent}
-              theme={theme}
-              now={now}
-              last={index === shownRows.length - 1}
-              tabbable={index === tabbable}
-              rowRef={(node) => {
-                if (node) rowRefs.current.set(agent.id, node);
-                else rowRefs.current.delete(agent.id);
-              }}
-              onFocus={() => setActiveIndex(index)}
-              onKey={(key) => onRowKey(index, key)}
-              onOpen={navigation ? () => navigation.openAgent({ agentId: agent.id }) : undefined}
-            />
-          ))
+          shownRows.map((agent, index) => {
+            const last = index === shownRows.length - 1;
+            const previewing = agent.id === previewId;
+            return (
+              <Fragment key={agent.id}>
+                <AgentRow
+                  agent={agent}
+                  theme={theme}
+                  now={now}
+                  last={last && !previewing}
+                  tabbable={index === tabbable}
+                  previewing={previewing}
+                  rowRef={(node) => {
+                    if (node) rowRefs.current.set(agent.id, node);
+                    else rowRefs.current.delete(agent.id);
+                  }}
+                  onFocus={() => setActiveIndex(index)}
+                  onKey={(key) => onRowKey(index, key)}
+                  onPress={() => setPreviewId(previewing ? null : agent.id)}
+                />
+                {previewing ? (
+                  <View style={[styles.preview, { borderBottomWidth: last ? 0 : 1 }]}>
+                    <AgentPreviewPane
+                      theme={theme}
+                      agentId={agent.id}
+                      openLabel={agent.archived ? "복원" : "열기"}
+                      onOpen={navigation ? () => navigation.openAgent({ agentId: agent.id }) : undefined}
+                    />
+                  </View>
+                ) : null}
+              </Fragment>
+            );
+          })
         )}
       </View>
       {rest > 0 ? (
@@ -409,20 +433,22 @@ function AgentRow({
   now,
   last,
   tabbable,
+  previewing,
   rowRef,
   onFocus,
   onKey,
-  onOpen,
+  onPress,
 }: {
   agent: HistoryAgent;
   theme: PluginTheme;
   now: number;
   last: boolean;
   tabbable: boolean;
+  previewing: boolean;
   rowRef: (node: View | null) => void;
   onFocus: () => void;
   onKey: (key: string) => boolean;
-  onOpen: (() => void) | undefined;
+  onPress: () => void;
 }) {
   const [hovered, hoverProps] = useHover();
   const [focused, setFocused] = useState(false);
@@ -440,8 +466,8 @@ function AgentRow({
       {...webKeyDown(onKey)}
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${STATUS_LABELS[agent.status]}${agent.requiresAttention ? ", 확인 필요" : ""}, ${meta}`}
-      disabled={!onOpen}
-      onPress={onOpen}
+      accessibilityState={{ expanded: previewing }}
+      onPress={onPress}
       {...hoverProps}
       style={({ pressed }) => ({
         gap: SPACE.xs,
@@ -449,7 +475,7 @@ function AgentRow({
         paddingHorizontal: SPACE.lg,
         borderBottomWidth: last ? 0 : 1,
         borderColor: theme.colors.border,
-        backgroundColor: (hovered || focused) && onOpen ? theme.colors.surface1 : "transparent",
+        backgroundColor: hovered || focused || previewing ? theme.colors.surface1 : "transparent",
         // 브라우저 기본 outline 은 목록 상자의 둥근 모서리에서 잘려서, 포커스는 배경과 왼쪽 띠로 보여준다.
         outlineWidth: 0,
         borderLeftWidth: 2,
