@@ -1,10 +1,12 @@
 import type { PluginTheme } from "@getpaseo/plugin";
+import { Markdown } from "@getpaseo/plugin/client/ui";
 import { Button, LoadingText, SPACE } from "paseo-ui-kit";
 import { useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useAgentPreview } from "./queries";
 
 const MAX_HEIGHT = 360;
+const MAX_LINE_WIDTH = 720;
 
 export function AgentPreviewPane({
   theme,
@@ -38,26 +40,36 @@ export function AgentPreviewPane({
     <ScrollView
       ref={scrollRef}
       style={{ maxHeight: MAX_HEIGHT }}
-      contentContainerStyle={{ gap: SPACE.md }}
+      contentContainerStyle={{ maxWidth: MAX_LINE_WIDTH, paddingLeft: SPACE.lg }}
       // 미리보기로 보려는 것은 최근 대화라서 맨 아래부터 보여준다.
       onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
     >
-      {data.messages.map((message, index) => (
-        <Text
-          key={index}
-          selectable
-          style={{
-            color: theme.colors.foreground,
-            fontSize: 13,
-            lineHeight: 19,
-            ...(message.role === "user"
-              ? { backgroundColor: theme.colors.surface2, borderRadius: 6, padding: SPACE.sm }
-              : null),
-          }}
-        >
-          {message.text}
-        </Text>
-      ))}
+      {data.messages.map((message, index) => {
+        const startsTurn = message.role === "user" && index > 0 && data.messages[index - 1].role !== "user";
+        const marginTop = index === 0 ? 0 : startsTurn ? SPACE.xl : SPACE.sm;
+        return message.role === "user" ? (
+          // 코드 블록이 회색 상자라서 사용자 메시지는 상자 대신 세로선으로 구분한다. 세로선만으로는 인용문과 헷갈려서 라벨을 둔다.
+          <View
+            key={index}
+            style={{
+              marginTop,
+              gap: SPACE.xs,
+              borderLeftWidth: 2,
+              borderLeftColor: theme.colors.accent,
+              paddingLeft: SPACE.sm,
+            }}
+          >
+            <Text style={muted}>나</Text>
+            <Text selectable style={{ color: theme.colors.foreground, fontSize: 14, lineHeight: 21 }}>
+              {message.text}
+            </Text>
+          </View>
+        ) : (
+          <View key={index} style={{ marginTop }}>
+            <Markdown>{message.text}</Markdown>
+          </View>
+        );
+      })}
     </ScrollView>
   );
 
