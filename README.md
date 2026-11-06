@@ -8,6 +8,7 @@
 | `paseo-catppuccin-latte` | Catppuccin 공식 팔레트의 Latte 색을 옮긴 라이트 테마. |
 | `paseo-github-light` | GitHub Primer의 라이트 색을 옮긴 라이트 테마. |
 | `paseo-gruvbox-light` | gruvbox의 라이트(중간 대비) 색을 옮긴 라이트 테마. |
+| `paseo-gruvbox-paper` | `paseo-gruvbox-light`에서 출발해 배경의 채도를 절반으로 낮춰 덜 노랗게 만든 라이트 테마. 글자와 강조색은 같다. |
 | `paseo-one-light` | Zed의 One Light 색을 옮긴 라이트 테마. |
 | `paseo-quiet-light` | VS Code의 Quiet Light 색을 옮긴 라이트 테마. |
 | `paseo-rose-pine-dawn` | Rosé Pine의 Dawn 색을 옮긴 라이트 테마. |
