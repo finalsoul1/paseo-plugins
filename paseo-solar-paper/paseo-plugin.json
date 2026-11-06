@@ -1,0 +1,4 @@
+{
+  "id": "solar-paper",
+  "requirements": { "paseo": ">=0.8.0" }
+}
