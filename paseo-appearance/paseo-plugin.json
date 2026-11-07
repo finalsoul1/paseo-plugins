@@ -1,0 +1,5 @@
+{
+  "id": "paseo-appearance",
+  "name": "모양 프리셋",
+  "requirements": { "paseo": ">=0.8.0" }
+}
