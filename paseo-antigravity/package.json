@@ -1,0 +1,25 @@
+{
+  "name": "paseo-antigravity",
+  "private": true,
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "LICENSE",
+    "NOTICE",
+    "paseo-plugin.json",
+    "OVERVIEW.md",
+    "icon.svg",
+    "index.server.ts",
+    "server/"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.14.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  }
+}

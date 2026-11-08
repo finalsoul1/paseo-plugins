@@ -7,6 +7,7 @@
 | 디렉터리 | 내용 |
 | --- | --- |
 | `paseo-agent-history` | 검색, 보관, 상태, 프로젝트, 기간 등으로 거를 수 있는 에이전트 기록 화면. 사이드바와 ⌘K로 연다. |
+| `paseo-antigravity` | `transcript_full.jsonl` 대화 기록 복원, 세션 가져오기(`session.list`), 한도·크레딧 사용량 표시(`registerUsageSource`), macOS 종료 시 `EPERM` 방지를 포함한 Antigravity CLI 프로바이더(`Antigravity (Persistent)`). `getpaseo/paseo` 기반 코드이므로 이 디렉터리는 Apache-2.0을 따른다. |
 | `paseo-appearance` | `client/appearance.json`에 적어 둔 글꼴·크기 등 모양 설정을 앱 로드 시 맞춘다. 파일을 고치면 `paseo plugin reload paseo-appearance`로 반영한다. |
 | `paseo-ui-kit` | 플러그인들이 같이 쓰는 client UI와 웹 단축키. 단독으로 설치하는 플러그인이 아니다. |
 

@@ -1,0 +1,6 @@
+{
+  "id": "paseo-antigravity",
+  "name": "Antigravity (Persistent)",
+  "description": "Antigravity CLI provider and usage source with transcript history replay, session import, and macOS process-group teardown fix.",
+  "requirements": { "paseo": ">=0.14.0" }
+}

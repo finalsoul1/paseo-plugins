@@ -1,0 +1,16 @@
+paseo-antigravity
+Copyright (c) 2026 finalsoul1
+
+This plugin includes code and assets derived from Paseo's built-in
+`antigravity-provider` (https://github.com/getpaseo/paseo), originally
+developed by Mohamed Boudra and Paseo contributors under the Apache License,
+Version 2.0.
+
+Modified and added files relative to upstream `antigravity-provider`:
+- `paseo-plugin.json`, `index.server.ts`, `server/provider.ts`: registered as standalone plugin/provider (`id: "agy"`, `label: "Antigravity (Persistent)"`) with `session.list` capability and missing-worktree `cwd` guards.
+- `server/internal/session.ts`, `server/internal/history.ts`: added JSONL transcript history replay (`history: "replay"`) and lazy `agy` driver startup.
+- `server/internal/sessions.ts`: added `listSessions` discovery from Antigravity's `conversation_summaries.db` and brain transcripts.
+- `server/internal/signals.ts`, `server/internal/process.ts`: handled `EPERM` on POSIX process-group teardown to prevent macOS daemon crashes.
+- `server/internal/timeline.ts`: added tool mappings for `read_file`, `write_file`, `edit_file`, `run_command`, `search_web`, and `invoke_subagent`.
+- `server/internal/catalog.ts`: synced `defaultModel` from Antigravity `settings.json` with `gemini-4-argon-medium` fallback.
+- `server/usage.ts`: added Antigravity quota and credit usage source (`registerUsageSource`).
