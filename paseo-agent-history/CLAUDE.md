@@ -17,5 +17,5 @@ Paseo 기본 「기록」 화면에 없는 필터(검색, 보관, 상태, 확인
 - `page.limit`은 200까지만 된다. 넘기면 클라이언트의 요청 검증(Zod)에서 바로 거절된다.
 - `includeArchived`를 빼면 아카이브되지 않은 에이전트만 온다(2026-10-28 실측 555개 중 20개).
 - 플러그인 RPC는 30초에서 끊기고, 이름은 소문자·숫자·`.`·`-`·`_`만 된다. 지금은 서버 엔트리와 RPC가 없다.
-- ⌘L은 Paseo의 "메시지 입력창 포커스" 단축키다. 이 플러그인은 기록 화면이 실제로 보일 때만 가로챈다(`paseo-ui-kit`의 `useWebShortcut`, `isShown`).
+- ⌘L은 Paseo의 "메시지 입력창 포커스" 단축키다. 이 플러그인은 기록 화면이 실제로 보일 때만 가로챈다. 화면 단축키(⌘L, Esc, 열 때 포커스, 화살표 이동)와 ⌘Y는 `paseo-ui-kit`의 `useScreenKeys`, `listNavKey`, `inputListKey`, `addScreenShortcut`을 다른 플러그인과 같이 쓴다. 키 동작을 바꿀 때는 키트에서 고친다.
 - 에이전트 열기는 화면 props의 `navigation.openAgent`로 한다. 오래된 호스트에는 `navigation`이 없어서 그때는 행을 누를 수 없게 둔다.

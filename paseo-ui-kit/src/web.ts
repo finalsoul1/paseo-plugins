@@ -143,3 +143,83 @@ export function shortcutLabel(key: string): string | null {
   const mac = /Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent);
   return mac ? `\u2318${key.toUpperCase()}` : `Ctrl+${key.toUpperCase()}`;
 }
+
+// 사이드바 행이 여는 화면의 단축키다. 어디서든 누르면 그 화면을 열고, 그 화면에서 한 번 더 누르면 열기 전 화면으로 돌아간다.
+export function addScreenShortcut(key: string, routeSuffix: string, open: () => void): () => void {
+  return addWebShortcut(key, () => {
+    if (isRouteOpen(routeSuffix)) goBack();
+    else open();
+    return true;
+  });
+}
+
+// 목록 화면들이 같은 키로 동작하게 묶었다. ⌘L은 입력칸으로, Esc는 열기 전 화면으로, 화면을 열면 입력칸에 포커스.
+// ⌘L은 Paseo의 "메시지 입력창 포커스" 단축키라서 화면이 실제로 보일 때만 가로챈다.
+// ready는 화면 폭을 잰 뒤 true로 준다. 폭을 재기 전후로 배치가 바뀌며 입력칸이 다시 마운트되기 때문이다.
+// 네이티브는 키보드가 목록을 가려서 열 때 포커스를 옮기지 않는다.
+export function useScreenKeys({
+  screenRef,
+  inputRef,
+  ready,
+  escapeBlocked = false,
+}: {
+  screenRef: { current: unknown };
+  inputRef: { current: { focus(): void } | null };
+  ready: boolean;
+  escapeBlocked?: boolean;
+}): void {
+  useWebShortcut("l", () => {
+    if (!isShown(inputRef.current)) return false;
+    inputRef.current?.focus();
+    return true;
+  });
+  const openFocused = useRef(false);
+  useEffect(() => {
+    if (!ready || openFocused.current || Platform.OS !== "web") return;
+    openFocused.current = true;
+    inputRef.current?.focus();
+  }, [ready]);
+  useWebEscape(screenRef, () => {
+    if (escapeBlocked || !isShown(screenRef.current)) return false;
+    goBack();
+    return true;
+  });
+}
+
+// 목록 행 사이는 Tab 대신 화살표로 옮겨 다니고, Tab 은 목록 전체를 한 번에 건너뛴다(roving tabindex).
+// 첫 행에서 위 화살표는 입력칸으로 돌아간다. 처리한 키면 true 다. Space·Enter·Esc 는 화면마다 달라서 부르는 쪽이 처리한다.
+export function listNavKey(
+  key: string,
+  index: number,
+  count: number,
+  focusRow: (index: number) => void,
+  focusInput: () => void,
+): boolean {
+  switch (key) {
+    case "ArrowDown":
+      focusRow(Math.min(index + 1, count - 1));
+      return true;
+    case "ArrowUp":
+      if (index === 0) focusInput();
+      else focusRow(index - 1);
+      return true;
+    case "Home":
+      focusRow(0);
+      return true;
+    case "End":
+      focusRow(count - 1);
+      return true;
+    default:
+      return false;
+  }
+}
+
+// React Native Web 의 TextInput 은 keydown 전파를 막아서 화면의 Esc 처리(useWebEscape)가 받지 못한다. 입력칸에서 직접 처리한다.
+// 아래 화살표는 첫 행으로, Esc 는 입력값이 있으면 지우고 비어 있으면 포커스를 뺀다.
+export function inputListKey(key: string, opts: { hasValue: boolean; clear(): void; blur(): void; focusFirstRow(): void }): void {
+  if (key === "ArrowDown") opts.focusFirstRow();
+  if (key === "Escape") {
+    if (opts.hasValue) opts.clear();
+    else opts.blur();
+  }
+}

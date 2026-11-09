@@ -1,20 +1,19 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import {
   Button,
   Chip,
-  goBack,
-  isShown,
+  inputListKey,
+  listNavKey,
   LoadingText,
   PRESSED_OPACITY,
   Segmented,
   shortcutLabel,
   SPACE,
   useHover,
-  useWebEscape,
-  useWebShortcut,
+  useScreenKeys,
   webKeyDown,
 } from "paseo-ui-kit";
 import { AppliedLabel, ClearAll, OptionRow } from "./controls";
@@ -85,25 +84,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
   const screenRef = useRef<View>(null);
   const searchRef = useRef<TextInput>(null);
   const rowRefs = useRef(new Map<string, View>());
-  // Cmd+L 은 Paseo 의 "메시지 입력창 포커스" 단축키라서, 이 화면이 실제로 보일 때만 가로챈다.
-  useWebShortcut("l", () => {
-    if (!isShown(searchRef.current)) return false;
-    searchRef.current?.focus();
-    return true;
-  });
-  // 폭을 재기 전에는 좁은 배치로 그렸다가 넓은 배치로 바뀌며 검색창이 다시 마운트되므로, 폭이 정해진 뒤 한 번만 옮긴다.
-  // 네이티브는 키보드가 목록을 가려서 웹에서만 한다.
-  const openFocused = useRef(false);
-  useEffect(() => {
-    if (width === 0 || openFocused.current || Platform.OS !== "web") return;
-    openFocused.current = true;
-    searchRef.current?.focus();
-  }, [width]);
-  useWebEscape(screenRef, () => {
-    if (!isShown(screenRef.current)) return false;
-    goBack();
-    return true;
-  });
+  useScreenKeys({ screenRef, inputRef: searchRef, ready: width > 0 });
 
   const styles = useMemo(
     () => ({
@@ -200,28 +181,12 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
     setActiveIndex(index);
     rowRefs.current.get(agent.id)?.focus();
   };
-  // 목록 행 사이는 Tab 대신 화살표로 옮겨 다니고, Tab 은 목록 전체를 한 번에 건너뛴다(roving tabindex).
   const onRowKey = (index: number, key: string): boolean => {
-    switch (key) {
-      case "ArrowDown":
-        focusRow(Math.min(index + 1, shownRows.length - 1));
-        return true;
-      case "ArrowUp":
-        if (index === 0) searchRef.current?.focus();
-        else focusRow(index - 1);
-        return true;
-      case "Home":
-        focusRow(0);
-        return true;
-      case "End":
-        focusRow(shownRows.length - 1);
-        return true;
-      case "Escape":
-        searchRef.current?.focus();
-        return true;
-      default:
-        return false;
+    if (key === "Escape") {
+      searchRef.current?.focus();
+      return true;
     }
+    return listNavKey(key, index, shownRows.length, focusRow, () => searchRef.current?.focus());
   };
 
   const header = (
@@ -253,14 +218,14 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
         onBlur={() => setSearchFocused(false)}
         value={filters.query}
         onChangeText={(text) => setFilters((current) => ({ ...current, query: text }))}
-        onKeyPress={({ nativeEvent }) => {
-          if (nativeEvent.key === "ArrowDown") focusRow(0);
-          // React Native Web 의 TextInput 은 keydown 전파를 막아서 화면의 Esc 처리(useWebEscape)가 받지 못한다.
-          if (nativeEvent.key === "Escape") {
-            if (filters.query) setFilters((current) => ({ ...current, query: "" }));
-            else searchRef.current?.blur();
-          }
-        }}
+        onKeyPress={({ nativeEvent }) =>
+          inputListKey(nativeEvent.key, {
+            hasValue: !!filters.query,
+            clear: () => setFilters((current) => ({ ...current, query: "" })),
+            blur: () => searchRef.current?.blur(),
+            focusFirstRow: () => focusRow(0),
+          })
+        }
         onSubmitEditing={() => focusRow(0)}
         placeholder={sideFilters ? "제목, 프로젝트, 브랜치 검색" : "제목, 프로젝트, 브랜치, 경로로 거르기 (아래 화살표로 목록 이동)"}
         placeholderTextColor={theme.colors.foregroundMuted}
