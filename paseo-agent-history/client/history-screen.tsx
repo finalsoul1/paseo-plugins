@@ -5,15 +5,19 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import {
   Button,
   Chip,
+  contentStyle,
   inputListKey,
   listNavKey,
   LoadingText,
   PRESSED_OPACITY,
+  SearchInput,
   Segmented,
-  shortcutLabel,
+  SideSplit,
+  SideTitle,
   SPACE,
   useHover,
   useScreenKeys,
+  useSideLayout,
   webKeyDown,
 } from "paseo-ui-kit";
 import { AppliedLabel, ClearAll, OptionRow } from "./controls";
@@ -36,8 +40,6 @@ import {
 import { AgentPreviewPane } from "./preview";
 import { useAgentHistory } from "./queries";
 
-const CONTENT_MAX_WIDTH = 960;
-const SIDE_WIDTH = 220;
 // 아카이브까지 받으면 수백 개라, 필터를 누를 때마다 전부 다시 그리지 않도록 "더 보기"로 늘린다.
 const PAGE_SIZE = 100;
 
@@ -68,14 +70,11 @@ function relativeTime(time: number, now: number): string {
 
 export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) {
   const history = useAgentHistory();
-  // 앱 사이드바가 열려 있으면 화면이 창보다 좁아서, 창 크기가 아니라 이 화면의 실제 폭으로 판단한다.
-  const [width, setWidth] = useState(0);
-  const sideFilters = !layout.compact && width >= CONTENT_MAX_WIDTH + SIDE_WIDTH + 120;
+  const { side: sideFilters, ready, onLayout } = useSideLayout(layout.compact);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>("updated");
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [searchFocused, setSearchFocused] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
   useEffect(() => {
     setVisible(PAGE_SIZE);
@@ -84,37 +83,16 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
   const screenRef = useRef<View>(null);
   const searchRef = useRef<TextInput>(null);
   const rowRefs = useRef(new Map<string, View>());
-  useScreenKeys({ screenRef, inputRef: searchRef, ready: width > 0 });
+  useScreenKeys({ screenRef, inputRef: searchRef, ready });
 
   const styles = useMemo(
     () => ({
       screen: { flex: 1, backgroundColor: theme.colors.surface0 },
-      content: {
-        width: "100%" as const,
-        maxWidth: CONTENT_MAX_WIDTH,
-        alignSelf: "center" as const,
-        padding: layout.compact ? SPACE.lg : SPACE.xl,
-        gap: SPACE.sm,
-      },
+      content: { ...contentStyle(layout.compact), gap: SPACE.sm },
       header: { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm },
       title: { color: theme.colors.foreground, fontSize: layout.compact ? 18 : 20, fontWeight: "600" as const },
       muted: { color: theme.colors.foregroundMuted, fontSize: 12, flex: 1 },
       error: { color: theme.colors.statusDanger, fontSize: 13 },
-      search: {
-        paddingVertical: SPACE.sm,
-        paddingHorizontal: SPACE.md,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        backgroundColor: theme.colors.surface2,
-        color: theme.colors.foreground,
-        fontSize: 13,
-        // 브라우저 기본 포커스 outline 은 왼쪽 칸 ScrollView 가장자리에서 잘려 깨져 보인다. 테두리 색으로 대신 표시한다.
-        outlineWidth: 0,
-      },
-      searchFocused: { borderColor: theme.colors.accent },
-      searchBox: { justifyContent: "center" as const },
-      searchHint: { position: "absolute" as const, right: SPACE.md, color: theme.colors.foregroundMuted, fontSize: 12 },
       // 줄바꿈된 칩끼리는 필터 줄 사이(SPACE.sm)보다 가까워야 같은 그룹으로 읽힌다.
       chips: {
         flexDirection: "row" as const,
@@ -124,25 +102,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
         columnGap: SPACE.sm,
       },
       chipLabel: { color: theme.colors.foregroundMuted, fontSize: 11, fontWeight: "600" as const, width: 64 },
-      split: {
-        flex: 1,
-        flexDirection: "row" as const,
-        width: "100%" as const,
-        maxWidth: CONTENT_MAX_WIDTH + SIDE_WIDTH + 24,
-        alignSelf: "center" as const,
-        gap: SPACE.xl,
-        paddingHorizontal: SPACE.xl,
-      },
-      side: { width: SIDE_WIDTH, flexGrow: 0, flexShrink: 0 },
-      sideContent: { paddingVertical: SPACE.xl, gap: SPACE.lg },
       sideGroup: { gap: SPACE.xs },
-      sideTitle: {
-        color: theme.colors.foregroundMuted,
-        fontSize: 11,
-        fontWeight: "600" as const,
-        letterSpacing: 0.4,
-        marginBottom: SPACE.xs,
-      },
       listBox: {
         borderWidth: 1,
         borderColor: theme.colors.border,
@@ -208,36 +168,25 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
     </View>
   );
 
-  const focusHint = shortcutLabel("l");
   const search = (
-    <View style={styles.searchBox}>
-      <TextInput
-        ref={searchRef}
-        style={[styles.search, searchFocused ? styles.searchFocused : null]}
-        onFocus={() => setSearchFocused(true)}
-        onBlur={() => setSearchFocused(false)}
-        value={filters.query}
-        onChangeText={(text) => setFilters((current) => ({ ...current, query: text }))}
-        onKeyPress={({ nativeEvent }) =>
-          inputListKey(nativeEvent.key, {
-            hasValue: !!filters.query,
-            clear: () => setFilters((current) => ({ ...current, query: "" })),
-            blur: () => searchRef.current?.blur(),
-            focusFirstRow: () => focusRow(0),
-          })
-        }
-        onSubmitEditing={() => focusRow(0)}
-        placeholder={sideFilters ? "제목, 프로젝트, 브랜치 검색" : "제목, 프로젝트, 브랜치, 경로로 거르기 (아래 화살표로 목록 이동)"}
-        placeholderTextColor={theme.colors.foregroundMuted}
-        accessibilityLabel="제목, 프로젝트, 브랜치, 경로로 거르기"
-        autoCorrect={false}
-      />
-      {focusHint && !searchFocused && !filters.query ? (
-        <Text style={styles.searchHint} pointerEvents="none">
-          {focusHint}
-        </Text>
-      ) : null}
-    </View>
+    <SearchInput
+      theme={theme}
+      inputRef={searchRef}
+      value={filters.query}
+      onChangeText={(text) => setFilters((current) => ({ ...current, query: text }))}
+      onKeyPress={({ nativeEvent }) =>
+        inputListKey(nativeEvent.key, {
+          hasValue: !!filters.query,
+          clear: () => setFilters((current) => ({ ...current, query: "" })),
+          blur: () => searchRef.current?.blur(),
+          focusFirstRow: () => focusRow(0),
+        })
+      }
+      onSubmitEditing={() => focusRow(0)}
+      placeholder={sideFilters ? "제목, 프로젝트, 브랜치 검색" : "제목, 프로젝트, 브랜치, 경로로 거르기 (아래 화살표로 목록 이동)"}
+      accessibilityLabel="제목, 프로젝트, 브랜치, 경로로 거르기"
+      autoCorrect={false}
+    />
   );
 
   const sortControl = (
@@ -317,48 +266,51 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
     </>
   );
 
-  const measure = (event: { nativeEvent: { layout: { width: number } } }) => setWidth(event.nativeEvent.layout.width);
-
   if (sideFilters) {
     return (
-      <View ref={screenRef} style={styles.screen} onLayout={measure}>
-        <View style={styles.split}>
-          {/* 창이 낮을 때만 넘치는 정도라 스크롤은 남기고, 넘칠 때마다 스크롤바가 생겼다 사라지지 않게 숨긴다. */}
-          <ScrollView style={styles.side} contentContainerStyle={styles.sideContent} showsVerticalScrollIndicator={false}>
-            {search}
-            <View style={styles.sideGroup}>
-              <Text style={styles.sideTitle}>정렬</Text>
-              {sortControl}
-            </View>
-            {shown.map((section) => (
-              <View key={section.key} style={styles.sideGroup}>
-                <Text style={styles.sideTitle}>{section.title}</Text>
-                {section.options.map((option) => (
-                  <OptionRow
-                    key={option.value}
-                    theme={theme}
-                    kind={section.kind}
-                    label={option.label}
-                    count={option.count}
-                    checked={option.checked}
-                    onPress={() => select(section.key, option.value)}
-                  />
-                ))}
+      <View ref={screenRef} style={styles.screen} onLayout={onLayout}>
+        {/* 창이 낮을 때만 넘치는 정도라 스크롤은 남기고, 넘칠 때마다 스크롤바가 생겼다 사라지지 않게 숨긴다. */}
+        <SideSplit
+          sideGap={SPACE.lg}
+          hideSideScrollbar
+          side={
+            <>
+              {search}
+              <View style={styles.sideGroup}>
+                <SideTitle theme={theme}>정렬</SideTitle>
+                {sortControl}
               </View>
-            ))}
-          </ScrollView>
+              {shown.map((section) => (
+                <View key={section.key} style={styles.sideGroup}>
+                  <SideTitle theme={theme}>{section.title}</SideTitle>
+                  {section.options.map((option) => (
+                    <OptionRow
+                      key={option.value}
+                      theme={theme}
+                      kind={section.kind}
+                      label={option.label}
+                      count={option.count}
+                      checked={option.checked}
+                      onPress={() => select(section.key, option.value)}
+                    />
+                  ))}
+                </View>
+              ))}
+            </>
+          }
+        >
           <ScrollView style={styles.main} contentContainerStyle={styles.mainContent}>
             {header}
             {appliedRow}
             {list}
           </ScrollView>
-        </View>
+        </SideSplit>
       </View>
     );
   }
 
   return (
-    <View ref={screenRef} style={styles.screen} onLayout={measure}>
+    <View ref={screenRef} style={styles.screen} onLayout={onLayout}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
         {header}
         {search}

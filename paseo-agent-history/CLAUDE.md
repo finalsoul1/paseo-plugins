@@ -8,7 +8,7 @@ Paseo 기본 「기록」 화면에 없는 필터(검색, 보관, 상태, 확인
 - 고친 뒤 순서: `npm run typecheck` → `paseo plugin reload paseo-agent-history` → `paseo plugin ls`에서 `running` 확인 → `paseo plugin logs paseo-agent-history`. 데몬 재시작은 하지 않는다.
 - 모바일 호환 audit: `rg -n "document\.|window\.|localStorage|navigator\.|className=|onClick=" client/`. 걸리면 버그다. DOM에 접근하는 코드는 `paseo-ui-kit/src/web.ts`에만 둔다.
 - 필터 로직 검증은 `client/filters.ts`와 `client/queries.ts`의 `fetchAll`을 esbuild로 묶어(`@getpaseo/plugin/client`, `@tanstack/react-query`는 `--alias`로 빈 모듈로 바꾼다) 실제 데몬 데이터로 Node에서 돌리고, 원본 응답으로 따로 센 값과 맞춘다. `@getpaseo/client`는 묶지 말고 이 디렉터리의 `.mjs`에서 import한다(tweetnacl의 동적 require 때문에 묶으면 깨진다). esbuild는 이 저장소에 없어서 npx로 받는다.
-- 공통 UI(`Button`, `Chip`, `Segmented`, `LoadingText`, `SPACE`, `useHover`, `tint`)와 웹 단축키(`useWebShortcut`, `useWebEscape`, `webKeyDown` 등)는 `../paseo-ui-kit`에 있다. 고칠 때는 그 디렉터리의 `CLAUDE.md`를 따른다.
+- 공통 UI(`Button`, `Chip`, `Segmented`, `LoadingText`, `SearchInput`, `SPACE`, `useHover`, `tint`)와 왼쪽 칸 배치(`useSideLayout`, `SideSplit`, `SideTitle`, `contentStyle`)와 웹 단축키(`useWebShortcut`, `useWebEscape`, `webKeyDown` 등)는 `../paseo-ui-kit`에 있다. 고칠 때는 그 디렉터리의 `CLAUDE.md`를 따른다.
 - git 저장소 루트는 상위 디렉터리 `paseo-plugins/`이고 GitHub에 올라간다. 회사 업무 정보(사내 서비스·저장소 이름, 실측 데이터에 나온 프로젝트 이름)는 커밋하지 않고 `../CLAUDE.local.md`에 둔다.
 
 ## 함정
