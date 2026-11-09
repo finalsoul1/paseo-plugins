@@ -1,6 +1,6 @@
 # paseo-ui-kit
 
-여러 Paseo 플러그인이 같이 쓰는 client UI(간격 `SPACE`, `useHover`, `tint`, `Button`, `Chip`, `Segmented`, `LoadingText`)와 웹 전용 코드(`src/web.ts`: 단축키, Esc, 화면 표시 여부, 뒤로 가기)다. 한 플러그인에서만 쓰는 컴포넌트는 그 플러그인 `client/`에 둔다. `web.ts`는 예외로, 한쪽만 쓰는 함수(`useModifierHeld`, `clearTextSelection`, `isRouteOpen`)도 여기에 둔다. DOM 접근과 `window`·`navigator` 타입 선언을 한 파일에 모아 두기 위해서다.
+여러 Paseo 플러그인이 같이 쓰는 client UI(간격 `SPACE`, `useHover`, `tint`, `Button`, `Chip`, `Segmented`, `LoadingText`, `ShortcutBadge`)와 웹 전용 코드(`src/web.ts`: 단축키, Esc, 화면 표시 여부, 뒤로 가기)다. 한 플러그인에서만 쓰는 컴포넌트는 그 플러그인 `client/`에 둔다. `web.ts`는 예외로, 한쪽만 쓰는 함수(`useModifierHeld`, `clearTextSelection`, `isRouteOpen`)도 여기에 둔다. DOM 접근과 `window`·`navigator` 타입 선언을 한 파일에 모아 두기 위해서다.
 
 ## 작업 규칙
 

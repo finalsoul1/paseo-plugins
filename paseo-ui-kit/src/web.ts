@@ -5,6 +5,8 @@ interface WebKeyEvent {
   key: string;
   metaKey: boolean;
   ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
   defaultPrevented: boolean;
   target: unknown;
   preventDefault(): void;
@@ -41,6 +43,8 @@ export function addWebShortcut(key: string, handler: () => boolean): () => void 
   if (Platform.OS !== "web") return () => {};
   const listener = (event: WebKeyEvent) => {
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== key) return;
+    // ⌥·Shift 조합은 앱이 따로 쓴다(⌘⌥I 개발자 도구, ⌘⇧D 등). 같은 글자라도 가로채지 않는다.
+    if (event.altKey || event.shiftKey) return;
     if (!handler()) return;
     event.preventDefault();
     event.stopImmediatePropagation();
