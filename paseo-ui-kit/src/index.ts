@@ -12,6 +12,7 @@ export {
   clearTextSelection,
   goBack,
   inputListKey,
+  isOnTop,
   isRouteOpen,
   isShown,
   listNavKey,

@@ -26,6 +26,13 @@ declare const window: {
   history: { back(): void };
 };
 
+declare const document: { elementFromPoint(x: number, y: number): unknown };
+
+interface WebElement {
+  getBoundingClientRect(): { left: number; top: number; width: number; height: number };
+  contains(other: unknown): boolean;
+}
+
 // RN 타입에는 onKeyDown 이 없지만 React Native Web 은 이 prop 을 DOM 으로 넘긴다. 네이티브에서는 붙이지 않는다.
 export function webKeyDown(handler: (key: string) => boolean): object {
   if (Platform.OS !== "web") return {};
@@ -135,6 +142,15 @@ export function goBack(): void {
 export function isShown(node: unknown): boolean {
   if (Platform.OS !== "web") return true;
   return (node as { offsetParent?: unknown } | null)?.offsetParent != null;
+}
+
+// isShown 보다 엄격하다. 다른 화면 뒤에 겹쳐 가려진 요소는 offsetParent 가 남아 있어서, 가운데 점에 실제로 그려진 것이 이 요소인지 본다.
+export function isOnTop(node: unknown): boolean {
+  if (Platform.OS !== "web" || !node) return false;
+  const element = node as WebElement;
+  const rect = element.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return false;
+  return element.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
 }
 
 // 단축키 안내를 Mac 이면 Command 기호로, 아니면 Ctrl 로 보여준다. 네이티브에는 이 단축키가 없어 null 이다.
