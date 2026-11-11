@@ -13,13 +13,15 @@ export function AgentPreviewPane({
   agentId,
   openLabel,
   onOpen,
+  staleTime,
 }: {
   theme: PluginTheme;
   agentId: string;
   openLabel: string;
   onOpen: (() => void) | undefined;
+  staleTime?: number;
 }) {
-  const preview = useAgentPreview(agentId);
+  const preview = useAgentPreview(agentId, staleTime);
   const scrollRef = useRef<ScrollView>(null);
   const muted = { color: theme.colors.foregroundMuted, fontSize: 12 };
   const data = preview.data;

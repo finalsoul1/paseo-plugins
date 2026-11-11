@@ -1,7 +1,7 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import {
   Button,
   Chip,
@@ -9,16 +9,13 @@ import {
   inputListKey,
   listNavKey,
   LoadingText,
-  PRESSED_OPACITY,
   SearchInput,
   Segmented,
   SideSplit,
   SideTitle,
   SPACE,
-  useHover,
   useScreenKeys,
   useSideLayout,
-  webKeyDown,
 } from "paseo-ui-kit";
 import { AppliedLabel, ClearAll, OptionRow } from "./controls";
 import {
@@ -31,7 +28,6 @@ import {
   SORTS,
   sortAgents,
   STATUS_LABELS,
-  type AgentStatus,
   type Filters,
   type FilterSection,
   type HistoryAgent,
@@ -39,34 +35,10 @@ import {
 } from "./filters";
 import { AgentPreviewPane } from "./preview";
 import { useAgentHistory } from "./queries";
+import { AgentRow } from "./row";
 
 // 아카이브까지 받으면 수백 개라, 필터를 누를 때마다 전부 다시 그리지 않도록 "더 보기"로 늘린다.
 const PAGE_SIZE = 100;
-
-function statusColor(theme: PluginTheme, status: AgentStatus): string {
-  switch (status) {
-    case "running":
-      return theme.colors.accent;
-    case "initializing":
-      return theme.colors.statusWarning;
-    case "idle":
-      return theme.colors.statusSuccess;
-    case "error":
-      return theme.colors.statusDanger;
-    case "closed":
-      return theme.colors.foregroundMuted;
-  }
-}
-
-function relativeTime(time: number, now: number): string {
-  const minutes = Math.floor((now - time) / 60_000);
-  if (minutes < 1) return "방금";
-  if (minutes < 60) return `${minutes}분 전`;
-  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)}시간 전`;
-  const date = new Date(time);
-  const day = `${date.getMonth() + 1}/${date.getDate()}`;
-  return date.getFullYear() === new Date(now).getFullYear() ? day : `${date.getFullYear()}/${day}`;
-}
 
 export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) {
   const history = useAgentHistory();
@@ -226,6 +198,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
                 <AgentRow
                   agent={agent}
                   theme={theme}
+                  time={agent.updatedAt}
                   now={now}
                   last={last && !previewing}
                   tabbable={index === tabbable}
@@ -237,7 +210,12 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
                   onFocus={() => setActiveIndex(index)}
                   onKey={(key) => onRowKey(index, key)}
                   onPress={() => setPreviewId(previewing ? null : agent.id)}
-                />
+                  accessibilityLabel={`${agent.title ?? "제목 없음"}, ${STATUS_LABELS[agent.status]}${agent.requiresAttention ? ", 확인 필요" : ""}, ${rowMeta(agent)}`}
+                >
+                  <Text numberOfLines={1} style={{ color: theme.colors.foregroundMuted, fontSize: 12, paddingLeft: SPACE.lg }}>
+                    {STATUS_LABELS[agent.status]} · {rowMeta(agent)}
+                  </Text>
+                </AgentRow>
                 {previewing ? (
                   <View style={[styles.preview, { borderBottomWidth: last ? 0 : 1 }]}>
                     <AgentPreviewPane
@@ -344,83 +322,6 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
   );
 }
 
-function AgentRow({
-  agent,
-  theme,
-  now,
-  last,
-  tabbable,
-  previewing,
-  rowRef,
-  onFocus,
-  onKey,
-  onPress,
-}: {
-  agent: HistoryAgent;
-  theme: PluginTheme;
-  now: number;
-  last: boolean;
-  tabbable: boolean;
-  previewing: boolean;
-  rowRef: (node: View | null) => void;
-  onFocus: () => void;
-  onKey: (key: string) => boolean;
-  onPress: () => void;
-}) {
-  const [hovered, hoverProps] = useHover();
-  const [focused, setFocused] = useState(false);
-  const title = agent.title ?? "제목 없음";
-  const meta = [agent.projectName, agent.place, agent.provider, agent.archived ? "아카이브" : null].filter(Boolean).join(" · ");
-  return (
-    <Pressable
-      ref={rowRef}
-      focusable={tabbable}
-      onFocus={() => {
-        setFocused(true);
-        onFocus();
-      }}
-      onBlur={() => setFocused(false)}
-      {...webKeyDown(onKey)}
-      accessibilityRole="button"
-      accessibilityLabel={`${title}, ${STATUS_LABELS[agent.status]}${agent.requiresAttention ? ", 확인 필요" : ""}, ${meta}`}
-      accessibilityState={{ expanded: previewing }}
-      onPress={onPress}
-      {...hoverProps}
-      style={({ pressed }) => ({
-        gap: SPACE.xs,
-        paddingVertical: SPACE.md,
-        paddingHorizontal: SPACE.lg,
-        borderBottomWidth: last ? 0 : 1,
-        borderColor: theme.colors.border,
-        backgroundColor: hovered || focused || previewing ? theme.colors.surface1 : "transparent",
-        // 브라우저 기본 outline 은 목록 상자의 둥근 모서리에서 잘려서, 포커스는 배경과 왼쪽 띠로 보여준다.
-        outlineWidth: 0,
-        borderLeftWidth: 2,
-        borderLeftColor: focused ? theme.colors.accent : "transparent",
-        opacity: pressed ? PRESSED_OPACITY : 1,
-      })}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusColor(theme, agent.status) }} />
-        <Text
-          numberOfLines={1}
-          style={{
-            flex: 1,
-            color: agent.archived || agent.title === null ? theme.colors.foregroundMuted : theme.colors.foreground,
-            fontSize: 14,
-            fontWeight: "600",
-          }}
-        >
-          {title}
-        </Text>
-        {agent.requiresAttention ? (
-          <Text style={{ color: theme.colors.statusWarning, fontSize: 11, fontWeight: "600" }}>확인 필요</Text>
-        ) : null}
-        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>{relativeTime(agent.updatedAt, now)}</Text>
-      </View>
-      <Text numberOfLines={1} style={{ color: theme.colors.foregroundMuted, fontSize: 12, paddingLeft: SPACE.lg }}>
-        {STATUS_LABELS[agent.status]} · {meta}
-      </Text>
-    </Pressable>
-  );
+function rowMeta(agent: HistoryAgent): string {
+  return [agent.projectName, agent.place, agent.provider, agent.archived ? "아카이브" : null].filter(Boolean).join(" · ");
 }

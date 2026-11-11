@@ -1,11 +1,14 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
 import { addScreenShortcut } from "paseo-ui-kit";
+import { AwaitingScreen } from "./client/awaiting-screen";
 import { HistoryScreen } from "./client/history-screen";
-import { HistorySidebarItem } from "./client/sidebar";
+import { AwaitingSidebarItem, HistorySidebarItem } from "./client/sidebar";
 
 export default function contribute(client: PluginClientContext) {
   client.addScreen({ id: "history", title: "에이전트 기록", Component: HistoryScreen });
   client.addSidebarHeaderItem({ id: "history", title: "에이전트 기록", Component: HistorySidebarItem });
+  client.addScreen({ id: "awaiting", title: "판단 대기", Component: AwaitingScreen });
+  client.addSidebarHeaderItem({ id: "awaiting", title: "판단 대기", Component: AwaitingSidebarItem });
   client.addCommandCenterItem({
     id: "open-history",
     title: "에이전트 기록 열기",
