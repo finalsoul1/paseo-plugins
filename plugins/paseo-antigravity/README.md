@@ -59,7 +59,7 @@ Paseo의 기존 내장 Antigravity 연동에는 실제 개발 환경에서 지�
 ### 1. 플러그인 빌드 및 설치
 
 ```sh
-cd paseo-plugins/paseo-antigravity
+cd paseo-plugins/plugins/paseo-antigravity
 npm install
 paseo plugin install "$PWD"
 ```
@@ -73,7 +73,7 @@ paseo plugin install "$PWD"
   "plugins": {
     "paseo-antigravity": {
       "source": "directory",
-      "path": "/절대경로/paseo-plugins/paseo-antigravity",
+      "path": "/절대경로/paseo-plugins/plugins/paseo-antigravity",
       "enabled": true
     }
   },

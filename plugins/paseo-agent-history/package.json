@@ -22,6 +22,6 @@
     "zod": "^4.4.3"
   },
   "dependencies": {
-    "paseo-ui-kit": "file:../paseo-ui-kit"
+    "paseo-ui-kit": "file:../../packages/paseo-ui-kit"
   }
 }

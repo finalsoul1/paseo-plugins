@@ -12,6 +12,6 @@
 
 ## 함정
 
-- 플러그인은 `"paseo-ui-kit": "file:../paseo-ui-kit"`(symlink)로 쓴다. Paseo 컴파일러는 `package.json`의 `name`이 import 이름과 같은 바깥 패키지를 linked dependency로 받아 준다. 이름을 바꾸면 번들이 깨진다.
+- 플러그인은 `"paseo-ui-kit": "file:../../packages/paseo-ui-kit"`(symlink)로 쓴다. Paseo 컴파일러는 `package.json`의 `name`이 import 이름과 같은 바깥 패키지를 linked dependency로 받아 준다. 이름을 바꾸면 번들이 깨진다.
 - 키트에는 `node_modules`가 없다. 그래서 쓰는 쪽 tsconfig에 `"preserveSymlinks": true`가 있어야 `react` 타입이 플러그인 쪽에서 풀린다.
 - 이 디렉터리의 `tsconfig.json`(`"jsx": "react-jsx"`)을 지우지 않는다. esbuild는 파일과 가장 가까운 tsconfig를 읽기 때문에, 없으면 `.tsx`가 classic JSX로 바뀌어 `React is not defined`가 난다.
