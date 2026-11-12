@@ -1,0 +1,21 @@
+{
+  "name": "paseo-workspace-context",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./shared": "./src/shared.ts",
+    "./server": "./src/server/index.ts",
+    "./client": "./src/client/index.ts"
+  },
+  "dependencies": {
+    "paseo-ui-kit": "file:../paseo-ui-kit"
+  },
+  "peerDependencies": {
+    "@getpaseo/plugin": "*",
+    "@tanstack/react-query": "*",
+    "react": "*",
+    "react-native": "*",
+    "zod": "*"
+  }
+}
