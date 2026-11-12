@@ -8,12 +8,14 @@ type Props = Omit<TextInputProps, "style" | "placeholderTextColor"> & {
   theme: PluginTheme;
   inputRef: Ref<TextInput>;
   value: string;
+  // 화면이 ⌘L 을 가로채지 않는 곳(워크스페이스 패널 등)에서는 끈다. 그곳의 ⌘L 은 Paseo 메시지 입력창 포커스다.
+  shortcutHint?: boolean;
 };
 
 // 목록 화면 맨 위 입력칸이다. 비어 있고 포커스가 없으면 오른쪽에 ⌘L 힌트를 둔다(useScreenKeys 의 ⌘L 과 짝).
-export function SearchInput({ theme, inputRef, value, onFocus, onBlur, ...rest }: Props) {
+export function SearchInput({ theme, inputRef, value, shortcutHint = true, onFocus, onBlur, ...rest }: Props) {
   const [focused, setFocused] = useState(false);
-  const hint = shortcutLabel("l");
+  const hint = shortcutHint ? shortcutLabel("l") : null;
   return (
     <View style={{ justifyContent: "center" }}>
       <TextInput
