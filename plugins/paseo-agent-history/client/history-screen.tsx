@@ -22,9 +22,11 @@ import {
   appliedFilters,
   applyFilters,
   DEFAULT_FILTERS,
+  displayTitle,
   EMPTY_FILTERS,
   filterSections,
   selectOption,
+  sessionTitle,
   SORTS,
   sortAgents,
   STATUS_LABELS,
@@ -155,8 +157,12 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
         })
       }
       onSubmitEditing={() => focusRow(0)}
-      placeholder={sideFilters ? "제목, 프로젝트, 브랜치 검색" : "제목, 프로젝트, 브랜치, 경로로 거르기 (아래 화살표로 목록 이동)"}
-      accessibilityLabel="제목, 프로젝트, 브랜치, 경로로 거르기"
+      placeholder={
+        sideFilters
+          ? "워크스페이스, 제목, 브랜치 검색"
+          : "워크스페이스, 제목, 프로젝트, 브랜치, 경로로 거르기 (아래 화살표로 목록 이동)"
+      }
+      accessibilityLabel="워크스페이스, 제목, 프로젝트, 브랜치, 경로로 거르기"
       autoCorrect={false}
     />
   );
@@ -210,7 +216,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
                   onFocus={() => setActiveIndex(index)}
                   onKey={(key) => onRowKey(index, key)}
                   onPress={() => setPreviewId(previewing ? null : agent.id)}
-                  accessibilityLabel={`${agent.title ?? "제목 없음"}, ${STATUS_LABELS[agent.status]}${agent.requiresAttention ? ", 확인 필요" : ""}, ${rowMeta(agent)}`}
+                  accessibilityLabel={`${displayTitle(agent) ?? "제목 없음"}, ${STATUS_LABELS[agent.status]}${agent.requiresAttention ? ", 확인 필요" : ""}, ${rowMeta(agent)}`}
                 >
                   <Text numberOfLines={1} style={{ color: theme.colors.foregroundMuted, fontSize: 12, paddingLeft: SPACE.lg }}>
                     {STATUS_LABELS[agent.status]} · {rowMeta(agent)}
@@ -323,5 +329,7 @@ export function HistoryScreen({ theme, layout, navigation }: PluginScreenProps) 
 }
 
 function rowMeta(agent: HistoryAgent): string {
-  return [agent.projectName, agent.place, agent.provider, agent.archived ? "아카이브" : null].filter(Boolean).join(" · ");
+  return [sessionTitle(agent), agent.projectName, agent.branch, agent.provider, agent.archived ? "아카이브" : null]
+    .filter(Boolean)
+    .join(" · ");
 }

@@ -2,7 +2,7 @@ import type { PluginTheme } from "@getpaseo/plugin";
 import { useState, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { PRESSED_OPACITY, SPACE, useHover, webKeyDown } from "paseo-ui-kit";
-import type { AgentStatus, HistoryAgent } from "./filters";
+import { displayTitle, type AgentStatus, type HistoryAgent } from "./filters";
 
 function statusColor(theme: PluginTheme, status: AgentStatus): string {
   switch (status) {
@@ -60,6 +60,7 @@ export function AgentRow({
 }) {
   const [hovered, hoverProps] = useHover();
   const [focused, setFocused] = useState(false);
+  const title = displayTitle(agent);
   return (
     <Pressable
       ref={rowRef}
@@ -95,12 +96,12 @@ export function AgentRow({
           numberOfLines={1}
           style={{
             flex: 1,
-            color: agent.archived || agent.title === null ? theme.colors.foregroundMuted : theme.colors.foreground,
+            color: agent.archived || title === null ? theme.colors.foregroundMuted : theme.colors.foreground,
             fontSize: 14,
             fontWeight: "600",
           }}
         >
-          {agent.title ?? "제목 없음"}
+          {title ?? "제목 없음"}
         </Text>
         {agent.requiresAttention ? (
           <Text style={{ color: theme.colors.statusWarning, fontSize: 11, fontWeight: "600" }}>확인 필요</Text>

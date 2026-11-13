@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { goBack, isShown, listNavKey, LoadingText, SPACE, useWebEscape } from "paseo-ui-kit";
 import { GROUPS, type AwaitingRow } from "./awaiting";
+import { displayTitle, sessionTitle } from "./filters";
 import { AgentPreviewPane } from "./preview";
 import { useAwaitingAgents } from "./queries";
 import { AgentRow } from "./row";
@@ -103,7 +104,7 @@ export function AwaitingScreen({ theme, layout, navigation, params }: PluginScre
                   last={last && !previewing}
                   tabbable={index === tabbable}
                   previewing={previewing}
-                  accessibilityLabel={`${row.agent.title ?? "제목 없음"}, ${group.title}, ${summaryText(row)}`}
+                  accessibilityLabel={`${displayTitle(row.agent) ?? "제목 없음"}, ${group.title}, ${summaryText(row)}`}
                   rowRef={(node) => {
                     if (node) rowRefs.current.set(row.agent.id, node);
                     else rowRefs.current.delete(row.agent.id);
@@ -114,7 +115,7 @@ export function AwaitingScreen({ theme, layout, navigation, params }: PluginScre
                 >
                   <Summary theme={theme} row={row} />
                   <Text numberOfLines={1} style={[muted, { paddingLeft: SPACE.lg }]}>
-                    {[row.agent.projectName, row.agent.place].filter(Boolean).join(" · ")}
+                    {[sessionTitle(row.agent), row.agent.projectName, row.agent.branch].filter(Boolean).join(" · ")}
                   </Text>
                 </AgentRow>
                 {previewing ? (

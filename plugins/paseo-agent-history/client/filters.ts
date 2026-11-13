@@ -4,17 +4,27 @@ export type Origin = "direct" | "schedule" | "child";
 export interface HistoryAgent {
   id: string;
   title: string | null;
+  workspace: string | null;
+  branch: string | null;
   status: AgentStatus;
   archived: boolean;
   requiresAttention: boolean;
   projectKey: string;
   projectName: string;
-  place: string | null;
   provider: string;
   origin: Origin;
   createdAt: number;
   updatedAt: number;
   searchText: string;
+}
+
+// 작업은 워크스페이스 단위로 나누고 세션 제목은 첫 메시지로 자동으로 정해져서, 행의 제목은 워크스페이스 제목을 앞세운다.
+export function displayTitle(agent: HistoryAgent): string | null {
+  return agent.workspace ?? agent.title;
+}
+
+export function sessionTitle(agent: HistoryAgent): string | null {
+  return agent.title === displayTitle(agent) ? null : agent.title;
 }
 
 export type Archive = "all" | "active" | "archived";
@@ -273,6 +283,12 @@ export function sortAgents(items: readonly HistoryAgent[], sort: SortKey): Histo
   const sorted = [...items];
   if (sort === "updated") sorted.sort((a, b) => b.updatedAt - a.updatedAt);
   else if (sort === "created") sorted.sort((a, b) => b.createdAt - a.createdAt);
-  else sorted.sort((a, b) => (a.title === null ? 1 : b.title === null ? -1 : a.title.localeCompare(b.title, "ko")));
+  else {
+    sorted.sort((a, b) => {
+      const left = displayTitle(a);
+      const right = displayTitle(b);
+      return left === null ? 1 : right === null ? -1 : left.localeCompare(right, "ko");
+    });
+  }
   return sorted;
 }

@@ -34,16 +34,16 @@ function originOf(labels: Record<string, string>): Origin {
 
 function toHistoryAgent({ agent, project }: AgentEntry): HistoryAgent {
   const branch = project.checkout.currentBranch;
-  const place = branch ?? project.workspaceName ?? null;
   return {
     id: agent.id,
     title: agent.title?.trim() || null,
+    workspace: project.workspaceName?.trim() || null,
+    branch,
     status: agent.status,
     archived: !!agent.archivedAt,
     requiresAttention: !!agent.requiresAttention,
     projectKey: project.projectKey,
     projectName: project.projectName,
-    place,
     provider: agent.provider,
     origin: originOf(agent.labels),
     createdAt: Date.parse(agent.createdAt),
