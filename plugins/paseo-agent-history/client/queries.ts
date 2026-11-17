@@ -48,7 +48,7 @@ function toHistoryAgent({ agent, project }: AgentEntry): HistoryAgent {
     origin: originOf(agent.labels),
     createdAt: Date.parse(agent.createdAt),
     updatedAt: Date.parse(agent.updatedAt),
-    searchText: [agent.title, project.projectName, project.workspaceName, branch, agent.cwd]
+    searchText: [agent.title, project.projectName, project.workspaceName, branch, agent.cwd, ...Object.values(agent.labels)]
       .filter(Boolean)
       .join("\n")
       .toLowerCase(),
