@@ -165,8 +165,8 @@ export class Session {
           ? undefined
           : (changes.thinkingOption ?? this.config.thinkingOption),
     };
-    if (changes.settings && Object.keys(changes.settings).length > 0)
-      throw new AntigravityError("Antigravity has no configurable settings");
+    if (changes.providerOptions && Object.keys(changes.providerOptions).length > 0)
+      throw new AntigravityError("Antigravity has no configurable options");
     validateSelection(config, this.options.catalog());
     this.config = config;
     this.publishConfig();
@@ -388,7 +388,6 @@ export class Session {
         models: this.options.catalog().models,
         modes: this.options.catalog().modes,
         thinkingOptions: [],
-        settings: [],
       },
     });
   }
