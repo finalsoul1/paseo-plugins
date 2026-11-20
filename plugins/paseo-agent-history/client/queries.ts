@@ -16,7 +16,7 @@ export async function fetchAll(paseo: PaseoApi): Promise<HistoryAgent[]> {
   let cursor: string | undefined;
   do {
     const page = await paseo.agents.list({
-      filter: { includeArchived: true },
+      filter: { includeArchived: true, includeBackground: true },
       sort: [{ key: "updated_at", direction: "desc" }],
       page: { limit: PAGE_LIMIT, cursor },
     });
@@ -26,7 +26,8 @@ export async function fetchAll(paseo: PaseoApi): Promise<HistoryAgent[]> {
   return agents;
 }
 
-function originOf(labels: Record<string, string>): Origin {
+function originOf({ background, labels }: AgentEntry["agent"]): Origin {
+  if (background) return "background";
   if ("paseo.schedule-id" in labels) return "schedule";
   if ("paseo.parent-agent-id" in labels) return "child";
   return "direct";
@@ -45,7 +46,7 @@ function toHistoryAgent({ agent, project }: AgentEntry): HistoryAgent {
     projectKey: project.projectKey,
     projectName: project.projectName,
     provider: agent.provider,
-    origin: originOf(agent.labels),
+    origin: originOf(agent),
     createdAt: Date.parse(agent.createdAt),
     updatedAt: Date.parse(agent.updatedAt),
     searchText: [agent.title, project.projectName, project.workspaceName, branch, agent.cwd, ...Object.values(agent.labels)]

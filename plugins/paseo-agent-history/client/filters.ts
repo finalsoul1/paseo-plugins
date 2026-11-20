@@ -1,5 +1,5 @@
 export type AgentStatus = "running" | "idle" | "error" | "closed" | "initializing";
-export type Origin = "direct" | "schedule" | "child";
+export type Origin = "direct" | "schedule" | "child" | "background";
 
 export interface HistoryAgent {
   id: string;
@@ -60,7 +60,12 @@ export const STATUS_LABELS: Record<AgentStatus, string> = {
   closed: "종료",
   initializing: "시작 중",
 };
-const ORIGIN_LABELS: Record<Origin, string> = { direct: "직접 만듦", schedule: "스케줄 실행", child: "하위 에이전트" };
+const ORIGIN_LABELS: Record<Origin, string> = {
+  direct: "직접 만듦",
+  schedule: "스케줄 실행",
+  child: "하위 에이전트",
+  background: "백그라운드",
+};
 
 const TITLES: Record<Dimension, string> = {
   archive: "보관",
